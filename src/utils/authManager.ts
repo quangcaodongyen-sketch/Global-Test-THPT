@@ -23,11 +23,11 @@ const DEFAULT_SETTINGS: SystemSettings = {
   adminPhone: '0915213717',
   adminName: 'Đinh Văn Thành',
   adminZalo: '0915213717',
-  schoolInfo: 'Trường THCS Đồng Yên, tỉnh Tuyên Quang',
+  schoolInfo: 'Trường THPT Đồng Yên, tỉnh Tuyên Quang',
   trialMaxUses: 5,
   vip1YearPrice: 200000,
   vip2YearPrice: 300000,
-  systemNotice: 'Ứng dụng hỗ trợ giáo viên THCS soạn đề thi & tích hợp năng lực số chuẩn Bộ GD&ĐT 2026.',
+  systemNotice: 'Ứng dụng hỗ trợ giáo viên THPT soạn đề thi & tích hợp năng lực số chuẩn Bộ GD&ĐT 2026.',
 };
 
 /**
@@ -44,12 +44,12 @@ export async function initAuthDatabase(): Promise<void> {
       username: 'Admin',
       passwordHash: adminHash,
       fullName: 'Thầy Đinh Văn Thành (Admin)',
-      school: 'THCS Đồng Yên, Tuyên Quang',
+      school: 'Trường THPT Đồng Yên, Tuyên Quang',
       phone: '0915213717',
       email: 'dinhthanhdongyen@gmail.com',
       province: 'Tuyên Quang',
       subject: 'Tiếng Anh',
-      gradeLevel: 'THCS (Lớp 6, 7, 8, 9)',
+      gradeLevel: 'THPT (Lớp 10, 11, 12)',
       teachingYears: 15,
       role: 'admin',
       subscription: 'vip_2y',
@@ -192,7 +192,7 @@ export async function registerMember(formData: {
     email: formData.email?.trim(),
     province: formData.province?.trim() || 'Tuyên Quang',
     subject: formData.subject?.trim() || 'Tiếng Anh',
-    gradeLevel: formData.gradeLevel?.trim() || 'THCS',
+    gradeLevel: formData.gradeLevel?.trim() || 'THPT',
     teachingYears: formData.teachingYears || 1,
     role: 'member',
     subscription: 'trial',
@@ -547,8 +547,8 @@ export function getAdminMetrics(): AdminMetrics {
  */
 export function exportDatabase(): string {
   const exportData = {
-    app: 'Global Success Test 2026',
-    author: 'Thầy Đinh Văn Thành - THCS Đồng Yên',
+    app: 'Global Success THPT Test 2026',
+    author: 'Thầy Đinh Văn Thành - Tuyên Quang',
     exportedAt: new Date().toISOString(),
     users: getAllUsers(),
     usageRecords: getUsageRecords(),

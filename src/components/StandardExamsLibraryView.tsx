@@ -15,11 +15,14 @@ import {
 } from 'lucide-react';
 import { consumeTrial, getSchoolConfig } from '../utils/licenseManager';
 import { downloadCustomizedStandardDocx } from '../utils/exactExamTemplateEngine';
+import { generateDynamicThanhExam } from '../utils/dynamicExamEngine';
+import { generateMatrixExcel } from '../utils/excelExporter';
 
 interface StandardExamsLibraryViewProps {
   onExamSuccess: (info: {
     fileName: string;
     examTitle: string;
+    fileBlob?: Blob;
     downloadUrl?: string;
   }) => void;
   onOpenActivationModal: () => void;
@@ -53,6 +56,9 @@ const LIBRARY_DATA: LibraryItem[] = [
     scoreType: '10.0đ Viết (Listening, Language, Reading, Writing) • 60 phút',
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_10/Giua_Ky_1/Ma tran - GK1 - Anh 10.docx',
+    specPath: '',
+    answerPath: '',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_10/Giua_Ky_1/Audio Task 1 - GK1 - Anh 10.mp3',
   },
   {
@@ -80,6 +86,8 @@ const LIBRARY_DATA: LibraryItem[] = [
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_10/Giua_Ky_2/Ma tran - GK2 - Anh 10.docx',
     specPath: '/bo_de_chuan/Tieng_Anh_10/Giua_Ky_2/Dac ta - GK2 - Anh 10.docx',
+    answerPath: '',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_10/Giua_Ky_2/Audio Task 1 - GK2 - Anh 10.mp3',
   },
   {
@@ -95,7 +103,7 @@ const LIBRARY_DATA: LibraryItem[] = [
     specPath: '/bo_de_chuan/Tieng_Anh_10/Cuoi_Ky_2/Dac ta - CK2 - Anh 10.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_10/Cuoi_Ky_2/Dap an - CK2 - Anh 10.docx',
     speakingPath: '/bo_de_chuan/Tieng_Anh_10/Cuoi_Ky_2/Speaking - CK2 - Anh 10.docx',
-    audioPath: '/bo_de_chuan/Tieng_Anh_10/Cuoi_Ky_2/Audio Task 1 - CK2 - Anh 10.mp3',
+    audioPath: '/bo_de_chuan/Tieng_Anh_10/Cuoi_Ky_2/Audio Task 1 - GK2 - Anh 10.mp3',
   },
 
   // LỚP 11
@@ -110,6 +118,7 @@ const LIBRARY_DATA: LibraryItem[] = [
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_1/Ma tran Dac ta - GK1 - Anh 11.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_1/Dap an - GK1 - Anh 11.docx',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_1/Audio Task 1 - GK1 - Anh 11.mp3',
   },
   {
@@ -123,6 +132,7 @@ const LIBRARY_DATA: LibraryItem[] = [
     hasSpeaking: true,
     matrixPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_1/Ma tran Dac ta - CK1 - Anh 11.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_1/Dap an - CK1 - Anh 11.docx',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_1/Audio Task 1 - CK1 - Anh 11.wav',
   },
   {
@@ -131,12 +141,13 @@ const LIBRARY_DATA: LibraryItem[] = [
     termName: 'Giữa Học Kỳ II',
     fileName: 'GK2 - Anh 11.docx',
     relPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_2/GK2 - Anh 11.docx',
-    units: 'Unit 6, 7, 8 (Preserving Our Heritage, Education Options, Becoming Independent)',
+    units: 'Unit 6, 7, 8 (Preserving Heritage, Education Options, Independent)',
     scoreType: '10.0đ Viết (Listening, Language, Reading, Writing) • 60 phút',
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_2/Ma tran - GK2 - Anh 11.docx',
     specPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_2/Dac ta - GK2 - Anh 11.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_2/Dap an - GK2 - Anh 11.docx',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_11/Giua_Ky_2/Audio Task 1 - GK2 - Anh 11.mp3',
   },
   {
@@ -145,13 +156,14 @@ const LIBRARY_DATA: LibraryItem[] = [
     termName: 'Cuối Học Kỳ II',
     fileName: 'CK2 - Anh 11.docx',
     relPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_2/CK2 - Anh 11.docx',
-    units: 'Unit 6 đến 10 (Social Issues, The Ecosystem)',
+    units: 'Unit 6 đến 10 (Social Issues, The Ecosystem, ASEAN Integration)',
     scoreType: '8.0đ Viết + 2.0đ Speaking (Tổng 10.0 điểm) • 60 phút',
     hasSpeaking: true,
-    matrixPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_2/Ma tran - CK2 - Anh 11.xlsx',
+    matrixPath: '',
     specPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_2/Dac ta - CK2 - Anh 11.docx',
+    answerPath: '',
     speakingPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_2/Speaking - CK2 - Anh 11.docx',
-    audioPath: '/bo_de_chuan/Tieng_Anh_11/Cuoi_Ky_2/Audio - CK2 - Anh 11.m4a',
+    audioPath: '',
   },
 
   // LỚP 12
@@ -161,11 +173,12 @@ const LIBRARY_DATA: LibraryItem[] = [
     termName: 'Giữa Học Kỳ I',
     fileName: 'GK1 - Anh 12.docx',
     relPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_1/GK1 - Anh 12.docx',
-    units: 'Unit 1, 2, 3 (Life Stories We Admire, A Multicultural World, Green Living)',
+    units: 'Unit 1, 2, 3 (Life Stories We Admire, Multicultural World, Green Living)',
     scoreType: '10.0đ Viết (Listening, Language, Reading, Writing) • 60 phút',
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_1/Ma tran - GK1 - Anh 12.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_1/Dap an - GK1 - Anh 12.docx',
+    speakingPath: '',
     audioPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_1/Audio - GK1 - Anh 12.wav',
   },
   {
@@ -174,7 +187,7 @@ const LIBRARY_DATA: LibraryItem[] = [
     termName: 'Cuối Học Kỳ I',
     fileName: 'CK1 - Anh 12.docx',
     relPath: '/bo_de_chuan/Tieng_Anh_12/Cuoi_Ky_1/CK1 - Anh 12.docx',
-    units: 'Unit 1 đến 5 (Urbanisation, The World of Work)',
+    units: 'Unit 1 đến 5 (Urbanisation, The World of Work, Green Living)',
     scoreType: '8.0đ Viết + 2.0đ Speaking (Tổng 10.0 điểm) • 60 phút',
     hasSpeaking: true,
     matrixPath: '/bo_de_chuan/Tieng_Anh_12/Cuoi_Ky_1/Ma tran - CK1 - Anh 12.docx',
@@ -189,11 +202,13 @@ const LIBRARY_DATA: LibraryItem[] = [
     termName: 'Giữa Học Kỳ II',
     fileName: 'GK2 - Anh 12.docx',
     relPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_2/GK2 - Anh 12.docx',
-    units: 'Unit 6, 7, 8 (Artificial Intelligence, Mass Media, Wildlife Conservation)',
+    units: 'Unit 6, 7, 8 (Artificial Intelligence, World of Mass Media, Wildlife)',
     scoreType: '10.0đ Viết (Listening, Language, Reading, Writing) • 60 phút',
     hasSpeaking: false,
     matrixPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_2/Ma tran - GK2 - Anh 12.docx',
     answerPath: '/bo_de_chuan/Tieng_Anh_12/Giua_Ky_2/Dap an - GK2 - Anh 12.docx',
+    speakingPath: '',
+    audioPath: '',
   },
   {
     id: '12_CK2',
@@ -235,53 +250,106 @@ export const StandardExamsLibraryView: React.FC<StandardExamsLibraryViewProps> =
       return;
     }
 
-    try {
-      const cfg = getSchoolConfig();
-      if (isExamMain) {
-        const result = await downloadCustomizedStandardDocx({
-          relPath: urlPath,
-          defaultFileName: fileName,
-          parentAgency: cfg.parentAgency,
-          schoolName: cfg.schoolName,
-        });
+    const cfg = getSchoolConfig();
+    const isDocx = fileName.toLowerCase().endsWith('.docx');
+    const isAnswer = fileName.toLowerCase().startsWith('dap an') || fileName.toLowerCase().startsWith('đáp án');
 
-        const url = URL.createObjectURL(result.blob);
+    try {
+      // 1. Nếu là Đề thi chính hoặc Đáp án Word: Sử dụng engine tải chuyên dụng có nạp sẵn Embedded Base64
+      if (isExamMain || isAnswer) {
+        let resultBlob: Blob;
+        let outFileName = fileName;
+
+        try {
+          const result = await downloadCustomizedStandardDocx({
+            relPath: urlPath,
+            defaultFileName: fileName,
+            parentAgency: cfg.parentAgency,
+            schoolName: cfg.schoolName,
+          });
+          resultBlob = result.blob;
+          outFileName = result.fileName;
+        } catch (templateErr) {
+          console.warn('Lỗi nạp template gốc, fallback sang dynamic docx engine:', templateErr);
+          const termCode = (item?.termName.includes('Giữa Học Kỳ I') || item?.termName.includes('Giữa Kì I')) ? 'GK1'
+            : (item?.termName.includes('Cuối Học Kỳ I') || item?.termName.includes('Cuối Kì I')) ? 'CK1'
+            : (item?.termName.includes('Giữa Học Kỳ II') || item?.termName.includes('Giữa Kì II')) ? 'GK2'
+            : 'CK2';
+          const dynamicResult = await generateDynamicThanhExam({
+            grade: item?.grade || '10',
+            term: termCode,
+            parentAgency: cfg.parentAgency,
+            schoolName: cfg.schoolName,
+          });
+          resultBlob = dynamicResult.blob;
+          outFileName = dynamicResult.fileName;
+        }
+
+        const url = URL.createObjectURL(resultBlob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = result.fileName;
+        a.download = outFileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 5000);
 
         onExamSuccess({
-          fileName: result.fileName,
-          examTitle: `Đề Kiểm Tra Tiếng Anh ${item?.grade || 'THPT'} - ${item?.termName || ''}`,
-          fileBlob: result.blob,
+          fileName: outFileName,
+          examTitle: isExamMain
+            ? `Đề Kiểm Tra Tiếng Anh ${item?.grade || 'THPT'} - ${item?.termName || ''}`
+            : `Đáp Án Tiếng Anh ${item?.grade || 'THPT'} - ${item?.termName || ''}`,
+          fileBlob: resultBlob,
         });
         return;
       }
 
-      // Tải trực tiếp các tệp phụ lục: ma trận, đáp án, audio
+      // 2. Với các tệp khác (Ma trận Excel, Speaking docx, Audio mp3)
+      // KIỂM TRA TRƯỚC: Nếu máy chủ trả về HTML (SPA redirect), TUYỆT ĐỐI KHÔNG TẢI VỀ vì sẽ gây lỗi định dạng file
+      const checkRes = await fetch(encodeURI(urlPath));
+      if (!checkRes.ok || checkRes.headers.get('content-type')?.includes('text/html')) {
+        // Nếu là Ma trận Excel, tự động tạo ma trận Excel chuẩn luôn!
+        if (fileName.toLowerCase().endsWith('.xlsx')) {
+          const matrixBlob = await generateMatrixExcel([], cfg.schoolName, item?.termName || 'Kiểm tra', '2025-2026', `Lớp ${item?.grade || '10'}`);
+          const url = URL.createObjectURL(matrixBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 5000);
+          onExamSuccess({
+            fileName,
+            examTitle: `Ma Trận & Đặc Tả Tiếng Anh ${item?.grade || 'THPT'}`,
+            fileBlob: matrixBlob,
+          });
+          return;
+        }
+
+        alert(`Tệp "${fileName}" đang được chuẩn hóa trên máy chủ đám mây. Thầy/Cô hãy tải đề thi Word chính (đã tích hợp sẵn đề, đáp án và ma trận chuẩn)!`);
+        return;
+      }
+
+      // Nếu tệp hợp lệ thực sự trên máy chủ, tải an toàn bằng blob
+      const fileBlob = await checkRes.blob();
+      const url = URL.createObjectURL(fileBlob);
       const a = document.createElement('a');
-      a.href = encodeURI(urlPath);
+      a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
 
       onExamSuccess({
         fileName: fileName,
-        examTitle: `Hồ sơ Khảo thí Tiếng Anh ${item?.grade || 'THPT'}`,
-        downloadUrl: urlPath,
+        examTitle: `Tệp Khảo Thí Tiếng Anh ${item?.grade || 'THPT'}`,
+        fileBlob,
       });
-    } catch {
-      const a = document.createElement('a');
-      a.href = encodeURI(urlPath);
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
+    } catch (err: any) {
+      console.error('Lỗi khi tải tệp:', err);
+      alert(`Không thể tải tệp "${fileName}": ${err?.message || err}`);
     }
   };
 

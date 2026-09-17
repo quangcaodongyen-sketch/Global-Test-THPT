@@ -144,7 +144,9 @@ export async function generateMatrixExcel(
 
   try {
     const res = await fetch(templatePath);
-    if (!res.ok) throw new Error(`Không thể tải template: ${templatePath}`);
+    if (!res.ok || res.headers.get('content-type')?.includes('text/html')) {
+      throw new Error(`Không thể tải template: ${templatePath}`);
+    }
     const arrayBuffer = await res.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
     
@@ -181,7 +183,9 @@ export async function generateSpecificationExcel(
 
   try {
     const res = await fetch(templatePath);
-    if (!res.ok) throw new Error(`Không thể tải template: ${templatePath}`);
+    if (!res.ok || res.headers.get('content-type')?.includes('text/html')) {
+      throw new Error(`Không thể tải template: ${templatePath}`);
+    }
     const arrayBuffer = await res.arrayBuffer();
     const zip = await JSZip.loadAsync(arrayBuffer);
     

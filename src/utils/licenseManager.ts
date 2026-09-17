@@ -364,19 +364,62 @@ export function saveActivation(info: {
   localStorage.setItem(STORAGE_KEYS.LICENSE_INFO, JSON.stringify(info));
 }
 
+export const DEFAULT_SCHOOL_NAME = 'THPT Đồng Yên';
+export const DEFAULT_PARENT_AGENCY = 'SỞ GD&ĐT TUYÊN QUANG';
+
 /**
- * Lấy cấu hình trường học
+ * Lấy cấu hình trường học (Ưu tiên theo tài khoản người dùng đang đăng nhập)
  */
 export function getSchoolConfig(): { parentAgency: string; schoolName: string } {
-  const parent = localStorage.getItem(STORAGE_KEYS.PARENT_AGENCY) || 'UBND XÃ ĐỒNG YÊN';
-  const school = localStorage.getItem(STORAGE_KEYS.SCHOOL_NAME) || 'TRƯỜNG THCS ĐỒNG YÊN';
+  let userSchool = '';
+  try {
+    const userJson = localStorage.getItem('GST_CURRENT_USER_SESSION_2026');
+    if (userJson) {
+      const u = JSON.parse(userJson);
+      if (u && u.school && u.school.trim()) {
+        userSchool = u.school.trim();
+      }
+    }
+  } catch {}
+
+  const parent = localStorage.getItem(STORAGE_KEYS.PARENT_AGENCY) || DEFAULT_PARENT_AGENCY;
+  const savedSchool = localStorage.getItem(STORAGE_KEYS.SCHOOL_NAME);
+  const school = userSchool || savedSchool || DEFAULT_SCHOOL_NAME;
+
   return { parentAgency: parent, schoolName: school };
 }
 
 /**
- * Lưu cấu hình trường học
+ * Lưu cấu hình trường học & tự động đồng bộ theo tài khoản người dùng
  */
 export function saveSchoolConfig(parentAgency: string, schoolName: string): void {
-  localStorage.setItem(STORAGE_KEYS.PARENT_AGENCY, parentAgency.trim().toUpperCase());
-  localStorage.setItem(STORAGE_KEYS.SCHOOL_NAME, schoolName.trim().toUpperCase());
+  const cleanParent = (parentAgency || DEFAULT_PARENT_AGENCY).trim().toUpperCase();
+  const cleanSchool = (schoolName || DEFAULT_SCHOOL_NAME).trim();
+
+  localStorage.setItem(STORAGE_KEYS.PARENT_AGENCY, cleanParent);
+  localStorage.setItem(STORAGE_KEYS.SCHOOL_NAME, cleanSchool);
+
+  // Tự động đồng bộ vào tài khoản người dùng đang đăng nhập & CSDL người dùng
+  try {
+    const userJson = localStorage.getItem('GST_CURRENT_USER_SESSION_2026');
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      if (user && user.id) {
+        user.school = cleanSchool;
+        localStorage.setItem('GST_CURRENT_USER_SESSION_2026', JSON.stringify(user));
+
+        const usersJson = localStorage.getItem('GST_USERS_DB_2026');
+        if (usersJson) {
+          const users = JSON.parse(usersJson);
+          const idx = users.findIndex((u: any) => u.id === user.id);
+          if (idx !== -1) {
+            users[idx].school = cleanSchool;
+            localStorage.setItem('GST_USERS_DB_2026', JSON.stringify(users));
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.error('Lỗi khi tự động lưu tên trường vào tài khoản người dùng:', e);
+  }
 }

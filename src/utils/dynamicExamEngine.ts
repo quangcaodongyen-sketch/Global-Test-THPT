@@ -445,3 +445,6 @@ export async function generateDynamicExamDocx(cfg: DynamicExamConfig): Promise<{
 
   return { blob, fileName: outFileName, code1, code2 };
 }
+
+export const generateDynamicThanhExam = generateDynamicExamDocx;
+

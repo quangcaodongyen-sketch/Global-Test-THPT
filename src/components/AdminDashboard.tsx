@@ -242,7 +242,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </span>
               </div>
               <p className="text-xs text-blue-200">
-                THCS Đồng Yên, Tuyên Quang • Hotline/Zalo: 0915213717
+                THPT Đồng Yên, Tuyên Quang • Hotline/Zalo: 0915213717
               </p>
             </div>
           </div>
@@ -258,8 +258,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 title="Mở kho lưu trữ 20 bộ đề và 4 đề cương gốc chuẩn"
               >
                 <BookOpen className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden sm:inline">Mở Kho Phụ Lục III & Tài Liệu Gốc</span>
-                <span className="sm:hidden">Kho Phụ Lục III</span>
+                <span className="hidden sm:inline">Mở Kho Đề Gốc Chuẩn</span>
+                <span className="sm:hidden">Kho Đề</span>
               </button>
             )}
             <button
@@ -820,7 +820,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <span className="font-bold text-blue-600">65% lượt dùng</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl">
-                      <span className="font-medium text-slate-700">Tải bộ đề chuẩn THCS (Lớp 6, 7, 8, 9)</span>
+                      <span className="font-medium text-slate-700">Tải bộ đề chuẩn THPT (Lớp 10, 11, 12)</span>
                       <span className="font-bold text-indigo-600">22% lượt dùng</span>
                     </div>
                     <div className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl">

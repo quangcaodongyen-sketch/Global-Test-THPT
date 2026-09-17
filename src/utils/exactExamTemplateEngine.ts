@@ -1,4 +1,9 @@
 import JSZip from 'jszip';
+import {
+  EMBEDDED_DOCX_TEMPLATES,
+  EMBEDDED_ANSWER_KEYS,
+  base64ToArrayBuffer,
+} from '../data/embeddedTemplates';
 
 // XML Escaping helper để tránh lỗi vỡ cú pháp XML khi tên trường hoặc cơ quan có ký tự &, <, >
 function escapeXml(str: string): string {
@@ -31,6 +36,25 @@ export const TEMPLATE_DOCX_PATHS: Record<string, Record<string, { relPath: strin
     CK2: { relPath: '/bo_de_chuan/Tieng_Anh_12/Cuoi_Ky_2/CK2 - Anh 12.docx', fileName: 'CK2 - Anh 12.docx' },
   },
 };
+
+export function getTemplateKey(relPath: string, fileName: string): string | null {
+  const clean = (relPath + ' ' + fileName).toUpperCase();
+  let grade = '';
+  if (clean.includes('ANH 10') || clean.includes('TIENG_ANH_10') || clean.includes('LỚP 10')) grade = '10';
+  else if (clean.includes('ANH 11') || clean.includes('TIENG_ANH_11') || clean.includes('LỚP 11')) grade = '11';
+  else if (clean.includes('ANH 12') || clean.includes('TIENG_ANH_12') || clean.includes('LỚP 12')) grade = '12';
+
+  let term = '';
+  if (clean.includes('GK1') || clean.includes('GIUA_KY_1') || clean.includes('GIỮA KỲ 1') || clean.includes('GIỮA HỌC KỲ I') || clean.includes('GIỮA HỌC KÌ I')) term = 'GK1';
+  else if (clean.includes('CK1') || clean.includes('CUOI_KY_1') || clean.includes('CUỐI KỲ 1') || clean.includes('CUỐI HỌC KỲ I') || clean.includes('CUỐI HỌC KÌ I')) term = 'CK1';
+  else if (clean.includes('GK2') || clean.includes('GIUA_KY_2') || clean.includes('GIỮA KỲ 2') || clean.includes('GIỮA HỌC KỲ II') || clean.includes('GIỮA HỌC KÌ II')) term = 'GK2';
+  else if (clean.includes('CK2') || clean.includes('CUOI_KY_2') || clean.includes('CUỐI KỲ 2') || clean.includes('CUỐI HỌC KỲ II') || clean.includes('CUỐI HỌC KÌ II')) term = 'CK2';
+
+  if (grade && term) {
+    return `${grade}_${term}`;
+  }
+  return null;
+}
 
 /**
  * Helper thay thế cơ quan quản lý và tên trường học linh hoạt trên tài liệu Word XML
@@ -74,9 +98,16 @@ function replaceSchoolHeaders(xmlContent: string, parentAgency: string, schoolNa
   return res;
 }
 
+function isZipBuffer(buffer: ArrayBuffer): boolean {
+  if (!buffer || buffer.byteLength < 4) return false;
+  const bytes = new Uint8Array(buffer, 0, 4);
+  return bytes[0] === 0x50 && bytes[1] === 0x4b; // 'P', 'K'
+}
+
 /**
  * 1. TẢI BỘ ĐỀ GỐC CHUẨN ĐÃ DUYỆT (TỰ ĐỘNG ĐIỀN TÊN TRƯỜNG & CƠ QUAN CỦA GIÁO VIÊN)
  * Đảm bảo 100% ĐÚNG Y HỆT ĐỀ MẪU CỦA TRƯỜNG THPT (4 Kỹ năng, Ma trận, Đặc tả, Bảng điểm, Audio, Speaking, Đáp án)
+ * Ưu tiên nạp từ Embedded Base64 trực tiếp trong mã nguồn -> Hoạt động 100% không phụ thuộc máy chủ hay Vercel.
  */
 export async function downloadCustomizedStandardDocx(params: {
   relPath: string;
@@ -86,13 +117,38 @@ export async function downloadCustomizedStandardDocx(params: {
 }): Promise<{ blob: Blob; fileName: string }> {
   const { relPath, defaultFileName, parentAgency, schoolName } = params;
 
-  const safeUrl = encodeURI(relPath);
-  const res = await fetch(safeUrl);
-  if (!res.ok) {
-    throw new Error(`Không thể nạp tệp mẫu chuẩn: ${relPath} (Mã HTTP ${res.status})`);
+  let arrayBuffer: ArrayBuffer | null = null;
+  const key = getTemplateKey(relPath, defaultFileName);
+  const isAnswer = defaultFileName.toLowerCase().startsWith('dap an') || defaultFileName.toLowerCase().startsWith('đáp án');
+
+  // Ưu tiên số 1: Lấy từ Embedded Base64 có sẵn trong src/data/
+  if (key) {
+    const b64 = isAnswer ? EMBEDDED_ANSWER_KEYS[key] : EMBEDDED_DOCX_TEMPLATES[key];
+    if (b64) {
+      arrayBuffer = base64ToArrayBuffer(b64);
+    }
   }
 
-  const arrayBuffer = await res.arrayBuffer();
+  // Ưu tiên số 2: Tải từ máy chủ nếu chưa có trong Embedded
+  if (!arrayBuffer) {
+    const safeUrl = encodeURI(relPath);
+    const res = await fetch(safeUrl);
+    if (!res.ok) {
+      throw new Error(`Không thể nạp tệp mẫu chuẩn: ${relPath} (Mã HTTP ${res.status})`);
+    }
+
+    const cType = res.headers.get('content-type') || '';
+    if (cType.includes('text/html')) {
+      throw new Error(`Đường dẫn tệp mẫu "${relPath}" bị chuyển hướng HTML (SPA route).`);
+    }
+
+    const fetchedBuffer = await res.arrayBuffer();
+    if (!isZipBuffer(fetchedBuffer)) {
+      throw new Error(`Tệp tại "${relPath}" không phải định dạng docx hợp lệ.`);
+    }
+    arrayBuffer = fetchedBuffer;
+  }
+
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const cleanParent = (parentAgency || 'SỞ GD&ĐT TUYÊN QUANG').trim().toUpperCase();
@@ -118,7 +174,7 @@ export async function downloadCustomizedStandardDocx(params: {
 
 /**
  * 2. TẠO ĐỀ MỚI NGẪU NHIÊN THEO ĐÚNG KHUÔN MẪU GỐC 100%
- * - Nạp đúng file mẫu chuẩn tương ứng của khối lớp & kỳ thi THPT.
+ * - Nạp đúng file mẫu chuẩn tương ứng của khối lớp & kỳ thi THPT (Ưu tiên Base64 nội tại).
  * - Cá nhân hóa Tên Cơ Quan Cấp Trên & Tên Trường THPT.
  * - Sinh 02 Mã đề mới ngẫu nhiên (ví dụ 103-104, 215-216, 317-318,...).
  * - Cập nhật mã đề trong Header, Footer và Bảng đáp án.
@@ -132,18 +188,36 @@ export async function generateDynamicExamFromExactTemplate(params: {
 }): Promise<{ blob: Blob; fileName: string; code1: string; code2: string }> {
   const { grade, term, parentAgency, schoolName } = params;
 
-  const catalog = TEMPLATE_DOCX_PATHS[grade]?.[term];
-  if (!catalog) {
-    throw new Error(`Chưa tìm thấy đề mẫu cho Khối ${grade} kỳ ${term}.`);
+  let arrayBuffer: ArrayBuffer | null = null;
+  const key = `${grade}_${term}`;
+  const b64 = EMBEDDED_DOCX_TEMPLATES[key];
+
+  if (b64) {
+    arrayBuffer = base64ToArrayBuffer(b64);
+  } else {
+    const catalog = TEMPLATE_DOCX_PATHS[grade]?.[term];
+    if (!catalog) {
+      throw new Error(`Chưa tìm thấy đề mẫu cho Khối ${grade} kỳ ${term}.`);
+    }
+
+    const safeUrl = encodeURI(catalog.relPath);
+    const res = await fetch(safeUrl);
+    if (!res.ok) {
+      throw new Error(`Không thể nạp đề mẫu chuẩn từ: ${catalog.relPath}`);
+    }
+
+    const cType = res.headers.get('content-type') || '';
+    if (cType.includes('text/html')) {
+      throw new Error(`Đường dẫn đề mẫu "${catalog.relPath}" bị chuyển hướng HTML.`);
+    }
+
+    const fetchedBuffer = await res.arrayBuffer();
+    if (!isZipBuffer(fetchedBuffer)) {
+      throw new Error(`Đề mẫu tại "${catalog.relPath}" không phải định dạng docx hợp lệ.`);
+    }
+    arrayBuffer = fetchedBuffer;
   }
 
-  const safeUrl = encodeURI(catalog.relPath);
-  const res = await fetch(safeUrl);
-  if (!res.ok) {
-    throw new Error(`Không thể nạp đề mẫu chuẩn từ: ${catalog.relPath}`);
-  }
-
-  const arrayBuffer = await res.arrayBuffer();
   const zip = await JSZip.loadAsync(arrayBuffer);
 
   const cleanParent = (parentAgency || 'SỞ GD&ĐT TUYÊN QUANG').trim().toUpperCase();

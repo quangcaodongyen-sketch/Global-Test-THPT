@@ -22,8 +22,10 @@ import {
 } from '../utils/licenseManager';
 import {
   downloadCustomizedStandardDocx,
-  generateDynamicExamFromExactTemplate,
 } from '../utils/exactExamTemplateEngine';
+import {
+  generateDynamicThanhExam,
+} from '../utils/dynamicExamEngine';
 
 interface ToolThanhExamViewProps {
   onExamSuccess: (info: {
@@ -189,7 +191,7 @@ export const ToolThanhExamView: React.FC<ToolThanhExamViewProps> = ({
 
   const currentMeta = EXAM_CATALOG[grade]?.[term] || EXAM_CATALOG['10']['GK1'];
 
-  // 1. Tải đề chuẩn có sẵn (Tự động điền Tên Trường & Cơ quan cấp trên của Thầy/Cô)
+  // 1. Tải đề chuẩn có sẵn (Tự động điền Tên Trường & Cơ quan cấp trên của Thầy/Cô, fallback thông minh)
   const handleDownloadStandard = async () => {
     const trial = consumeTrial();
     if (!trial.allowed) {
@@ -200,26 +202,43 @@ export const ToolThanhExamView: React.FC<ToolThanhExamViewProps> = ({
     saveSchoolConfig(parentAgency, schoolName);
     setIsGenerating(true);
     try {
-      const result = await downloadCustomizedStandardDocx({
-        relPath: currentMeta.relPath,
-        defaultFileName: currentMeta.file,
-        parentAgency,
-        schoolName,
-      });
+      let resultBlob: Blob;
+      let outFileName = currentMeta.file;
 
-      const url = URL.createObjectURL(result.blob);
+      try {
+        const result = await downloadCustomizedStandardDocx({
+          relPath: currentMeta.relPath,
+          defaultFileName: currentMeta.file,
+          parentAgency,
+          schoolName,
+        });
+        resultBlob = result.blob;
+        outFileName = result.fileName;
+      } catch (dlErr) {
+        console.warn('Không thể nạp đề mẫu tĩnh, tự động tạo đề chuẩn trực tiếp:', dlErr);
+        const dynamicRes = await generateDynamicThanhExam({
+          grade,
+          term,
+          parentAgency,
+          schoolName,
+        });
+        resultBlob = dynamicRes.blob;
+        outFileName = dynamicRes.fileName;
+      }
+
+      const url = URL.createObjectURL(resultBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = result.fileName;
+      a.download = outFileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 5000);
 
       onExamSuccess({
-        fileName: result.fileName,
-        examTitle: `Đề Thi Gốc Chuẩn Tiếng Anh ${grade} (${term})`,
-        fileBlob: result.blob,
+        fileName: outFileName,
+        examTitle: `Đề Thi Chuẩn Tiếng Anh ${grade} (${term})`,
+        fileBlob: resultBlob,
       });
     } catch (err: any) {
       alert(`Không thể tải file đề mẫu: ${err?.message || err}`);
@@ -228,7 +247,7 @@ export const ToolThanhExamView: React.FC<ToolThanhExamViewProps> = ({
     }
   };
 
-  // 2. Sinh đề mới ngẫu nhiên tương đương theo đúng khuôn mẫu gốc
+  // 2. Sinh đề mới ngẫu nhiên tương đương theo đúng khuôn mẫu gốc (tự động fallback mượt mà)
   const handleGenerateDynamic = async () => {
     const trial = consumeTrial();
     if (!trial.allowed) {
@@ -239,7 +258,7 @@ export const ToolThanhExamView: React.FC<ToolThanhExamViewProps> = ({
     saveSchoolConfig(parentAgency, schoolName);
     setIsGenerating(true);
     try {
-      const result = await generateDynamicExamFromExactTemplate({
+      const result = await generateDynamicThanhExam({
         grade,
         term,
         parentAgency,
@@ -261,6 +280,7 @@ export const ToolThanhExamView: React.FC<ToolThanhExamViewProps> = ({
         fileBlob: result.blob,
       });
     } catch (err: any) {
+      console.error('Lỗi khi sinh đề:', err);
       alert(`Lỗi sinh đề: ${err?.message || err}`);
     } finally {
       setIsGenerating(false);

@@ -55,8 +55,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [regPassword, setRegPassword] = useState<string>('');
   const [regConfirmPassword, setRegConfirmPassword] = useState<string>('');
   const [regProvince, setRegProvince] = useState<string>('Tuyên Quang');
-  const [regSubject, setRegSubject] = useState<string>('Toán học THCS');
-  const [regGradeLevel, setRegGradeLevel] = useState<string>('THCS (Lớp 6, 7, 8, 9)');
+  const [regSubject, setRegSubject] = useState<string>('Tiếng Anh THPT');
+  const [regGradeLevel, setRegGradeLevel] = useState<string>('THPT (Lớp 10, 11, 12)');
 
   useEffect(() => {
     if (isOpen) {
@@ -72,14 +72,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   // Xử lý điền nhanh mẫu thành viên ví dụ cho người dùng kiểm tra chức năng đăng ký
   const handleFillSampleMember = () => {
     setRegFullName('Nguyễn Thị Lan');
-    setRegSchool('Trường THCS Chu Văn An');
+    setRegSchool('Trường THPT Chu Văn An');
     setRegPhone('0988123456');
     setRegUsername('giaovien_lan');
     setRegPassword('Giaovien123@');
     setRegConfirmPassword('Giaovien123@');
     setRegProvince('Hà Nội');
-    setRegSubject('Toán học & Tin học');
-    setRegGradeLevel('THCS (Lớp 6-9)');
+    setRegSubject('Tiếng Anh');
+    setRegGradeLevel('THPT (Lớp 10-12)');
     setErrorMsg(null);
   };
 
@@ -187,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-bold tracking-tight">Hệ Thống Thành Viên & Bản Quyền</h2>
-              <p className="text-xs text-blue-100">NLS-AI THCS PRO 2026 • Thầy Đinh Văn Thành</p>
+              <p className="text-xs text-blue-100">Global Success Test 2026 • Thầy Đinh Văn Thành</p>
             </div>
           </div>
 
@@ -396,7 +396,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="text"
                       value={regSchool}
                       onChange={e => setRegSchool(e.target.value)}
-                      placeholder="VD: THCS Đồng Yên"
+                      placeholder="VD: THPT Đồng Yên"
                       required
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -440,7 +440,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="text"
                       value={regSubject}
                       onChange={e => setRegSubject(e.target.value)}
-                      placeholder="VD: Toán, Ngữ văn, KHTN, Tiếng Anh..."
+                      placeholder="VD: Tiếng Anh"
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -452,7 +452,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       type="text"
                       value={regGradeLevel}
                       onChange={e => setRegGradeLevel(e.target.value)}
-                      placeholder="VD: THCS Lớp 6-9"
+                      placeholder="VD: THPT Lớp 10-12"
                       className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -523,7 +523,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Footer liên hệ bản quyền */}
           <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-            <span>Tác giả: Thầy Đinh Văn Thành • THCS Đồng Yên</span>
+            <span>Tác giả: Thầy Đinh Văn Thành • Tuyên Quang</span>
             <a
               href="https://zalo.me/0915213717"
               target="_blank"
