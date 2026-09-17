@@ -82,7 +82,7 @@ export const OutOfTrialsModal: React.FC<OutOfTrialsModalProps> = ({
               Kính gửi Quý Thầy/Cô {currentUser?.fullName ? `(${currentUser.fullName})` : ''},
             </p>
             <p>
-              Bạn đã sử dụng hết <strong>5 lượt dùng thử miễn phí</strong>. Nếu thấy ứng dụng hữu ích cho công việc soạn giảng đề kiểm tra và muốn tiếp tục sử dụng đầy đủ các tính năng nâng cao, quý thầy cô có thể liên hệ để kích hoạt tài khoản <strong>VIP</strong> và góp phần duy trì, nâng cấp hệ thống phục vụ cộng đồng giáo viên Tiếng Anh toàn quốc.
+              Bạn đã sử dụng hết <strong>5 lượt dùng thử miễn phí</strong>. Nếu thấy ứng dụng hữu ích cho công việc soạn giảng tích hợp Năng lực số, AI và các chuyên đề giáo dục THCS theo Công văn 5512 và muốn tiếp tục sử dụng đầy đủ các tính năng nâng cao, quý thầy cô có thể liên hệ để kích hoạt tài khoản <strong>VIP</strong> và góp phần duy trì, nâng cấp hệ thống phục vụ cộng đồng giáo viên THCS trên toàn quốc.
             </p>
             <div className="pt-1 flex items-center gap-2 text-xs font-medium text-amber-800">
               <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
@@ -121,7 +121,7 @@ export const OutOfTrialsModal: React.FC<OutOfTrialsModalProps> = ({
                   200.000 <span className="text-xs font-normal text-slate-500">VNĐ</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-snug">
-                  Toàn quyền tạo đề thi, ma trận, bản đặc tả và xuất file Word chuẩn CV 7991 không giới hạn trong 1 năm.
+                  Toàn quyền tích hợp Năng lực số, AI và các nội dung giáo dục THCS chuẩn Công văn 5512 không giới hạn trong 1 năm.
                 </p>
               </div>
 
@@ -147,7 +147,7 @@ export const OutOfTrialsModal: React.FC<OutOfTrialsModalProps> = ({
                   300.000 <span className="text-xs font-normal text-slate-500">VNĐ</span>
                 </div>
                 <p className="text-[11px] text-slate-600 leading-snug">
-                  Chỉ 150k/năm! Sử dụng đầy đủ tính năng VIP 2 năm và nhận trọn bộ ngân hàng đề chuẩn cập nhật mới nhất.
+                  Chỉ 150k/năm! Tích hợp NLS-AI không giới hạn trong 2 năm và mở khóa toàn bộ kho Phụ lục III chuẩn cập nhật mới nhất.
                 </p>
               </div>
             </div>
